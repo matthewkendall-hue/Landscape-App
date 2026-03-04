@@ -36,19 +36,22 @@ export function endPlantDrag() {
 
 export function renderPlants() {
   const svg = getSvg();
-  svg.querySelectorAll('circle.plant-circle').forEach(n => n.remove());
+  svg.querySelectorAll('.plant-circle').forEach(n => n.remove());
   for (const p of state.placed) {
+    const col = LAYER_HEX[p.layer] || '#94a3b8';
     const c = ns('circle');
     c.setAttribute('cx', p.x);
     c.setAttribute('cy', p.y);
     c.setAttribute('r', p.r);
-    c.setAttribute('fill', LAYER_HEX[p.layer] || '#94a3b8');
+    c.setAttribute('fill', col);
     c.setAttribute('fill-opacity', '0.45');
-    c.setAttribute('stroke', LAYER_HEX[p.layer] || '#94a3b8');
-    c.setAttribute('stroke-width', '1.5');
+    c.setAttribute('stroke', col);
+    c.setAttribute('stroke-width', p.pinned ? '2.5' : '1.5');
+    if (p.pinned) c.setAttribute('stroke-dasharray', '3,2');
     c.setAttribute('class', 'plant-circle');
     c.style.cursor = 'grab';
-    c.appendChild(mkTitle(`${p.name}\nLayer: ${p.layer}\nSpacing: ${p.spacing}ft\nLight: ${p.light}\nWater: ${p.water}\n\nDrag to move · Dbl-click removes`));
+    const pinHint = p.pinned ? '\n📌 Pinned — right-click to unpin' : '\nRight-click to pin';
+    c.appendChild(mkTitle(`${p.name}\nLayer: ${p.layer}\nSpacing: ${p.spacing}ft\nLight: ${p.light}\nWater: ${p.water}${pinHint}\nDrag to move · Dbl-click removes`));
     c.addEventListener('mousedown', startPlantDrag(p, c));
     c.addEventListener('dblclick', () => {
       snapshot();
@@ -56,7 +59,28 @@ export function renderPlants() {
       renderPlants();
       renderList();
     });
+    c.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      snapshot();
+      p.pinned = !p.pinned;
+      renderPlants();
+      renderList();
+    });
     svg.appendChild(c);
+
+    // Pin indicator
+    if (p.pinned) {
+      const pin = ns('text');
+      pin.setAttribute('x', p.x);
+      pin.setAttribute('y', p.y - p.r - 3);
+      pin.setAttribute('text-anchor', 'middle');
+      pin.setAttribute('font-size', '8');
+      pin.setAttribute('fill', col);
+      pin.setAttribute('class', 'plant-circle pin-indicator');
+      pin.textContent = '\u{1F4CC}';
+      svg.appendChild(pin);
+    }
   }
   renderAllNodes(); // keep nodes on top
 }

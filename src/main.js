@@ -20,6 +20,7 @@ import { showSaveModal, showLoadModal, exportProjectFile, setOnRebuild } from '.
 import { renderMeasurements, toggleMeasurements } from './modules/measurements.js';
 import { renderSiteAnalysis } from './modules/siteAnalysis.js';
 import { showGardenConcepts } from './modules/gardenViewer3d.js';
+import { startPlantLine, initPlantLine } from './modules/plantLine.js';
 
 /**
  * Rebuild SVG shapes from serialized shape data and re-render all UI.
@@ -99,6 +100,8 @@ function init() {
   // Action buttons
   document.getElementById('btn-fill').onclick = autoFill;
   document.getElementById('btn-clear-plants').onclick = clearAllPlants;
+  document.getElementById('btn-plant-line').onclick = startPlantLine;
+  initPlantLine();
   document.getElementById('btn-export').onclick = exportProjectFile;
   document.getElementById('btn-reset').onclick = resetAll;
 

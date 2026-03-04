@@ -190,8 +190,9 @@ export function solveForArea(area, seed) {
   const resolveSeed = seed ?? area._resolveSeed ?? Math.floor(Math.random() * 2147483647);
   area._resolveSeed = resolveSeed;
 
-  // Remove previously placed plants for this area
-  state.placed = state.placed.filter(p => p.areaId !== area.id);
+  // Preserve pinned plants, remove the rest for this area
+  const pinnedInArea = state.placed.filter(p => p.areaId === area.id && p.pinned);
+  state.placed = state.placed.filter(p => p.areaId !== area.id || p.pinned);
 
   // Build combined plant list: respect plant source mode
   const useMyPlants = plantSourceMode === 'all' || plantSourceMode === 'myPlants';
@@ -206,8 +207,8 @@ export function solveForArea(area, seed) {
   }
   if (!allPlants.length) { alert('No compatible plants found. Add plants to the library.'); return; }
 
-  // Existing placements in other areas (for collision avoidance)
-  const existingPlaced = state.placed.filter(p => p.areaId !== area.id);
+  // Existing placements in other areas + pinned plants as obstacles
+  const existingPlaced = [...state.placed.filter(p => p.areaId !== area.id), ...pinnedInArea];
 
   // Run naturalistic placement algorithm
   const results = naturalisticSolve(area, allPlants, existingPlaced, resolveSeed);

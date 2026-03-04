@@ -1,6 +1,6 @@
 import { TYPE_CFG } from '../config.js';
-import { shapes, selectedShapeId, setSelectedShapeId, setDraggingNode } from '../state.js';
-import { ns, getSvg } from '../utils/svg.js';
+import { shapes, selectedShapeId, setSelectedShapeId, setDraggingNode, setDraggingEdge } from '../state.js';
+import { ns, getSvg, svgPt } from '../utils/svg.js';
 import { renderShapeList } from './shapeList.js';
 import { renderHouseEdge } from './houseEdge.js';
 import { renderPlants } from './plants.js';
@@ -78,6 +78,38 @@ export function renderAllNodes() {
 
     shape.points.forEach((pt, idx) => {
       const next = shape.points[(idx + 1) % shape.points.length];
+
+      // edge drag hit area (invisible wide line)
+      if (isSel) {
+        const edge = ns('line');
+        edge.setAttribute('x1', pt.x);
+        edge.setAttribute('y1', pt.y);
+        edge.setAttribute('x2', next.x);
+        edge.setAttribute('y2', next.y);
+        edge.setAttribute('stroke', 'transparent');
+        edge.setAttribute('stroke-width', '14');
+        edge.setAttribute('class', 'edge-hit');
+        edge.style.cursor = 'move';
+        edge.style.pointerEvents = 'stroke';
+        edge.addEventListener('mousedown', e => {
+          e.stopPropagation();
+          snapshot();
+          selectShape(shape.id);
+          const dx = next.x - pt.x;
+          const dy = next.y - pt.y;
+          const len = Math.hypot(dx, dy) || 1;
+          const startSvg = svgPt(e);
+          setDraggingEdge({
+            shapeId: shape.id,
+            idx,
+            startSvg,
+            origA: { x: pt.x, y: pt.y },
+            origB: { x: next.x, y: next.y },
+            normal: { x: -dy / len, y: dx / len },
+          });
+        });
+        g.appendChild(edge);
+      }
 
       // mid-edge add-node button
       const mx = (pt.x + next.x) / 2, my = (pt.y + next.y) / 2;

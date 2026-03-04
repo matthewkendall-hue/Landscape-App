@@ -29,6 +29,10 @@ export function setGhostDots(v) { ghostDots = v; }
 export let draggingNode = null;
 export function setDraggingNode(v) { draggingNode = v; }
 
+// Edge dragging
+export let draggingEdge = null;
+export function setDraggingEdge(v) { draggingEdge = v; }
+
 // Plant dragging
 export let plantDrag = null;
 export function setPlantDrag(v) { plantDrag = v; }

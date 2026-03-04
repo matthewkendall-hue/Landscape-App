@@ -75,6 +75,11 @@ export function initDragToCanvas() {
       }
     }
 
+    // Detect if drop is inside a landscape area
+    const targetArea = shapes.find(s =>
+      s.type === 'landscape' && s.closed && ptInPoly(x, y, s.points)
+    );
+
     const spacingPx = ftToPx(plant.spacing || plant.width || 3);
     const r = spacingPx / 2 * 0.95;
 
@@ -89,6 +94,8 @@ export function initDragToCanvas() {
       light: plant.light,
       water: plant.water,
       fromMyPlants,
+      areaId: targetArea ? targetArea.id : undefined,
+      pinned: !!targetArea,
     });
 
     renderPlants();

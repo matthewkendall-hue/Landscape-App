@@ -6,6 +6,7 @@ import { renderShapeList } from './shapeList.js';
 import { movePlant, endPlantDrag } from './plants.js';
 import { undo, redo } from './undoRedo.js';
 import { isParametricMode, handleParametricClick } from './parametric.js';
+import { isPlantLineMode, handlePlantLineClick, handlePlantLineMove } from './plantLine.js';
 
 let lastClickTime = 0;
 
@@ -76,6 +77,12 @@ export function initDrawingEvents() {
   const svg = getSvg();
 
   svg.addEventListener('click', evt => {
+    // Plant line mode intercept
+    if (isPlantLineMode()) {
+      handlePlantLineClick(evt);
+      return;
+    }
+
     // Parametric placement intercept
     if (isParametricMode()) {
       handleParametricClick(evt);
@@ -112,6 +119,7 @@ export function initDrawingEvents() {
   });
 
   svg.addEventListener('mousemove', evt => {
+    if (isPlantLineMode()) handlePlantLineMove(evt);
     const p = svgPt(evt);
     if (st.drawingType) updatePreview(p.x, p.y);
     if (st.draggingNode) {
@@ -122,11 +130,26 @@ export function initDrawingEvents() {
         renderAllNodes();
       }
     }
+    if (st.draggingEdge) {
+      const shape = st.shapes.find(s => s.id === st.draggingEdge.shapeId);
+      if (shape) {
+        const e = st.draggingEdge;
+        const nextIdx = (e.idx + 1) % shape.points.length;
+        const dx = p.x - e.startSvg.x;
+        const dy = p.y - e.startSvg.y;
+        const proj = dx * e.normal.x + dy * e.normal.y;
+        shape.points[e.idx] = { x: e.origA.x + e.normal.x * proj, y: e.origA.y + e.normal.y * proj };
+        shape.points[nextIdx] = { x: e.origB.x + e.normal.x * proj, y: e.origB.y + e.normal.y * proj };
+        refreshShape(shape);
+        renderAllNodes();
+      }
+    }
     if (st.plantDrag) movePlant(evt);
   });
 
   window.addEventListener('mouseup', () => {
     st.setDraggingNode(null);
+    st.setDraggingEdge(null);
     endPlantDrag();
   });
 
