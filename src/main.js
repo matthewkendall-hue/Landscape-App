@@ -8,7 +8,7 @@ import { renderShapeList } from './modules/shapeList.js';
 import { initHouseEdge } from './modules/houseEdge.js';
 import { renderHouseEdge } from './modules/houseEdge.js';
 import { initSurvey } from './modules/survey.js';
-import { autoFill } from './modules/autofill.js';
+import { autoFill, clearAllPlants, setPlantSourceMode } from './modules/autofill.js';
 import { exportJSON, resetAll } from './modules/exportReset.js';
 import { makeShapeEl, renderAllNodes } from './modules/shapes.js';
 import { undo, redo, setOnRestore } from './modules/undoRedo.js';
@@ -19,6 +19,7 @@ import { initDragToCanvas } from './modules/dragToCanvas.js';
 import { showSaveModal, showLoadModal, exportProjectFile, setOnRebuild } from './modules/saveLoad.js';
 import { renderMeasurements, toggleMeasurements } from './modules/measurements.js';
 import { renderSiteAnalysis } from './modules/siteAnalysis.js';
+import { showGardenConcepts } from './modules/gardenViewer3d.js';
 
 /**
  * Rebuild SVG shapes from serialized shape data and re-render all UI.
@@ -90,8 +91,14 @@ function init() {
   // Library form
   initLibraryForm();
 
+  // Plant source selector
+  document.getElementById('plant-source').addEventListener('change', e => {
+    setPlantSourceMode(e.target.value);
+  });
+
   // Action buttons
   document.getElementById('btn-fill').onclick = autoFill;
+  document.getElementById('btn-clear-plants').onclick = clearAllPlants;
   document.getElementById('btn-export').onclick = exportProjectFile;
   document.getElementById('btn-reset').onclick = resetAll;
 
@@ -101,6 +108,18 @@ function init() {
 
   // Measurements toggle
   document.getElementById('btn-measure').onclick = toggleMeasurements;
+
+  // 3D Concepts button
+  document.getElementById('btn-concepts').onclick = () => {
+    const zone = document.getElementById('region-select').value;
+    showGardenConcepts(zone);
+  };
+
+  // Auto-show 3D concepts when location/region changes
+  document.getElementById('region-select').addEventListener('change', () => {
+    const zone = document.getElementById('region-select').value;
+    showGardenConcepts(zone);
+  });
 
   // Undo/redo buttons
   document.getElementById('btn-undo').onclick = undo;

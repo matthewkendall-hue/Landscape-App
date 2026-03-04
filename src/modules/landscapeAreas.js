@@ -2,6 +2,7 @@ import { LAYER_CSS, SUN_EXPOSURE, HYDROZONE, SOIL_TYPE, USE_ZONE } from '../conf
 import { shapes, selectedShapeId, state } from '../state.js';
 import { selectShape } from './shapes.js';
 import { snapshot } from './undoRedo.js';
+import { getPlantSourceMode } from './autofill.js';
 
 export function getAreaShapes() {
   return shapes.filter(s => s.type === 'landscape' && s.closed);
@@ -153,13 +154,34 @@ export function renderAreaPanel() {
     mod.renderPlants();
   });
 
+  // ——— Plant source info ———
+  const sourceMode = getPlantSourceMode();
+  const sourceInfo = document.createElement('div');
+  sourceInfo.className = 'area-source-info';
+  const queueLen = (area.queueOverride || state.queue).length;
+  const myLen = state.myPlants.filter(mp => mp.includeInSolve !== false).length;
+
+  let sourceText = '';
+  if (sourceMode === 'myPlants') {
+    sourceText = myLen ? `Using ${myLen} My Plant${myLen !== 1 ? 's' : ''}` : 'No My Plants — will use library defaults';
+  } else if (sourceMode === 'recommended') {
+    sourceText = queueLen ? `Using ${queueLen} queued plant${queueLen !== 1 ? 's' : ''}` : 'No queue — will use library defaults';
+  } else {
+    const parts = [];
+    if (myLen) parts.push(`${myLen} owned`);
+    if (queueLen) parts.push(`${queueLen} queued`);
+    sourceText = parts.length ? `Using ${parts.join(' + ')}` : 'Will use zone-appropriate library defaults';
+  }
+  sourceInfo.textContent = sourceText;
+  body.appendChild(sourceInfo);
+
   // Resolve / Try Another / Clear buttons
   const hasPlants = state.placed.some(p => p.areaId === area.id);
 
   const btnRow = document.createElement('div');
   btnRow.style.display = 'flex';
   btnRow.style.gap = '4px';
-  btnRow.style.marginTop = '8px';
+  btnRow.style.marginTop = '6px';
 
   const resolveBtn = document.createElement('button');
   resolveBtn.className = 'btn primary';

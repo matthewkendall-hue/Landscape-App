@@ -25,6 +25,7 @@ export function addToMyPlants(plant, quantity = 1) {
       region: plant.region,
       quantity,
       used: 0,
+      includeInSolve: true, // default: included in auto-fill
     });
   }
   renderMyPlants();
@@ -43,17 +44,31 @@ export function renderMyPlants() {
 
   wrap.innerHTML = '';
   if (!state.myPlants.length) {
-    wrap.innerHTML = '<div class="hint-text">No owned plants. Use \u2b50 in library.</div>';
+    wrap.innerHTML = `<div class="hint-text">
+      <div>No owned plants yet.</div>
+      <div style="font-size:9px;color:var(--text3);margin-top:3px;line-height:1.5">Click <span style="color:var(--tree-c)">★</span> on a library plant to add it to your inventory.</div>
+    </div>`;
     return;
   }
 
   // Recount used quantities from placed plants
   recountUsed();
 
+  // Summary header
+  const total = state.myPlants.reduce((s, mp) => s + mp.quantity, 0);
+  const included = state.myPlants.filter(mp => mp.includeInSolve !== false).length;
+  const header = document.createElement('div');
+  header.className = 'mp-header';
+  header.innerHTML = `<span class="mp-summary">${total} plant${total !== 1 ? 's' : ''} · ${included} in solver</span>`;
+  wrap.appendChild(header);
+
   for (const mp of state.myPlants) {
     const remaining = mp.quantity - mp.used;
+    const isIncluded = mp.includeInSolve !== false;
+
     const row = document.createElement('div');
-    row.className = 'mp-item';
+    row.className = 'mp-item' + (!isIncluded ? ' mp-excluded' : '');
+
     // Draggable to canvas
     if (remaining > 0) {
       row.draggable = true;
@@ -73,9 +88,35 @@ export function renderMyPlants() {
       row.style.cursor = 'grab';
     }
 
+    // Include toggle (checkbox on the left)
+    const toggle = document.createElement('button');
+    toggle.className = 'mp-toggle' + (isIncluded ? ' mp-toggle-on' : '');
+    toggle.innerHTML = isIncluded ? '✓' : '—';
+    toggle.title = isIncluded ? 'Included in solve (click to exclude)' : 'Excluded from solve (click to include)';
+    toggle.onclick = (e) => {
+      e.stopPropagation();
+      snapshot();
+      mp.includeInSolve = !isIncluded;
+      renderMyPlants();
+    };
+
     const info = document.createElement('div');
     info.className = 'mp-info';
-    info.innerHTML = `<div class="mp-name"><span class="layer-dot" style="background:${LAYER_CSS[mp.layer] || '#aaa'}"></span>${mp.name}</div><div class="mp-meta">${remaining}/${mp.quantity} remaining</div>`;
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'mp-name';
+    nameEl.innerHTML = `<span class="layer-dot" style="background:${LAYER_CSS[mp.layer] || '#aaa'}"></span>${mp.name}`;
+
+    const metaEl = document.createElement('div');
+    metaEl.className = 'mp-meta';
+    if (mp.used > 0) {
+      metaEl.innerHTML = `<span class="mp-used">${mp.used} placed</span> · ${remaining} left of ${mp.quantity}`;
+    } else {
+      metaEl.textContent = `${remaining}/${mp.quantity} available`;
+    }
+
+    info.appendChild(nameEl);
+    info.appendChild(metaEl);
 
     const controls = document.createElement('div');
     controls.className = 'mp-controls';
@@ -112,6 +153,7 @@ export function renderMyPlants() {
     del.className = 'remove-btn';
     del.textContent = '\u00d7';
     del.title = 'Remove from inventory';
+    del.style.marginLeft = '2px';
     del.onclick = () => removeFromMyPlants(mp.plantId);
 
     controls.appendChild(minus);
@@ -119,6 +161,7 @@ export function renderMyPlants() {
     controls.appendChild(plus);
     controls.appendChild(del);
 
+    row.appendChild(toggle);
     row.appendChild(info);
     row.appendChild(controls);
     wrap.appendChild(row);
@@ -138,15 +181,15 @@ function recountUsed() {
 
 /**
  * Get my plants as queue-compatible objects for the solver.
- * Each entry repeats based on remaining quantity.
+ * Only returns plants where includeInSolve is true and remaining > 0.
  */
 export function getMyPlantsForSolver() {
   recountUsed();
   const result = [];
   for (const mp of state.myPlants) {
+    if (mp.includeInSolve === false) continue; // skip excluded plants
     const remaining = mp.quantity - mp.used;
     if (remaining > 0) {
-      // Create a queue-like plant object with quantity limit
       result.push({
         id: mp.plantId,
         name: mp.name,

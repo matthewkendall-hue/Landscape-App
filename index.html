@@ -35,12 +35,19 @@
   <div class="tool-group">
     <span class="group-label">Planting</span>
     <button class="btn" id="btn-house-edge">House Edge</button>
+    <select id="plant-source" title="Plant source for auto-fill and concepts">
+      <option value="all">All Plants</option>
+      <option value="myPlants">My Plants Only</option>
+      <option value="recommended">Queue Only</option>
+    </select>
     <button class="btn primary" id="btn-fill">Auto-Fill</button>
+    <button class="btn danger" id="btn-clear-plants" title="Clear all placed plants">Clear Plants</button>
   </div>
   <div class="hdr-div"></div>
   <div class="tool-group">
     <span class="group-label">View</span>
     <button class="btn" id="btn-measure" title="Toggle edge lengths and area labels">Measure</button>
+    <button class="btn" id="btn-concepts" title="View 3D garden concepts for your zone">3D Concepts</button>
   </div>
   <div class="hdr-div"></div>
   <div class="tool-group">

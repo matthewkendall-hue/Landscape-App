@@ -6,6 +6,17 @@ import { snapshot } from './undoRedo.js';
 import { getMyPlantsForSolver, renderMyPlants } from './myPlants.js';
 import { naturalisticSolve } from './naturalisticPlacement.js';
 
+/**
+ * Get a fallback plant list from the library, filtered by the current region.
+ * Used when neither queue nor My Plants have entries.
+ */
+function getLibraryFallback(zones) {
+  const region = document.getElementById('region-select')?.value || 'All';
+  const candidates = state.plants.filter(p => region === 'All' || p.region === region);
+  if (!candidates.length) return state.plants.slice(0, 6); // absolute fallback
+  return zones ? filterByZone(candidates, zones) : candidates;
+}
+
 function inObstacle(x, y) {
   return shapes.some(s => (s.type === 'house' || s.type === 'patio') && ptInPoly(x, y, s.points));
 }
@@ -116,23 +127,55 @@ function filterByZone(queue, zones) {
     .map(p => p.plant);
 }
 
+/**
+ * Plant source mode for auto-fill:
+ * 'all'         — My Plants first, then queue plants (default)
+ * 'myPlants'    — Only use plants from My Plants inventory
+ * 'recommended' — Only use plants from the queue (library picks)
+ */
+let plantSourceMode = 'all';
+export function getPlantSourceMode() { return plantSourceMode; }
+export function setPlantSourceMode(mode) { plantSourceMode = mode; }
+
 export function autoFill() {
   if (!getSiteShape()) { alert('Draw a Site Boundary first.'); return; }
   if (houseEdgeIndex == null) { alert('Set the House Edge first.'); return; }
   if (!state.queue.length && !state.myPlants.length) { alert('Queue at least one plant from the library or add to My Plants.'); return; }
   snapshot();
 
+  const useMyPlants = plantSourceMode === 'all' || plantSourceMode === 'myPlants';
+  const useQueue = plantSourceMode === 'all' || plantSourceMode === 'recommended';
+
   // Place My Plants first (respecting quantity limits)
-  const myPlants = sortByLayer(getMyPlantsForSolver());
-  for (const plant of myPlants) {
-    const results = packPlant(plant, null, null, plant._maxCount);
-    state.placed.push(...results);
+  if (useMyPlants) {
+    const myPlants = sortByLayer(getMyPlantsForSolver());
+    for (const plant of myPlants) {
+      const results = packPlant(plant, null, null, plant._maxCount);
+      state.placed.push(...results);
+    }
   }
 
   // Then fill remaining space with queue plants
-  const sorted = sortByLayer(state.queue);
-  for (const plant of sorted) state.placed.push(...packPlant(plant));
+  if (useQueue) {
+    const sorted = sortByLayer(state.queue);
+    for (const plant of sorted) state.placed.push(...packPlant(plant));
+  }
 
+  renderPlants();
+  renderList();
+  renderMyPlants();
+}
+
+/**
+ * Clear all auto-filled plants (global reset).
+ */
+export function clearAllPlants() {
+  snapshot();
+  state.placed = [];
+  // Reset all area seeds
+  for (const s of shapes) {
+    if (s._resolveSeed !== undefined) s._resolveSeed = null;
+  }
   renderPlants();
   renderList();
   renderMyPlants();
@@ -141,7 +184,6 @@ export function autoFill() {
 // Solve a specific landscape area using naturalistic placement (zone-aware)
 export function solveForArea(area, seed) {
   const queue = area.queueOverride || state.queue;
-  if (!queue.length && !state.myPlants.length) { alert('Queue at least one plant.'); return; }
   const zones = area.zones || null;
 
   // Resolve seed: use provided, or stored, or generate new
@@ -151,10 +193,18 @@ export function solveForArea(area, seed) {
   // Remove previously placed plants for this area
   state.placed = state.placed.filter(p => p.areaId !== area.id);
 
-  // Build combined plant list: My Plants first, then queue, zone-filtered
-  const myPlants = filterByZone(sortByLayer(getMyPlantsForSolver()), zones);
-  const queuePlants = filterByZone(sortByLayer(queue), zones);
-  const allPlants = [...myPlants, ...queuePlants];
+  // Build combined plant list: respect plant source mode
+  const useMyPlants = plantSourceMode === 'all' || plantSourceMode === 'myPlants';
+  const useQueue = plantSourceMode === 'all' || plantSourceMode === 'recommended';
+  const myPlants = useMyPlants ? filterByZone(sortByLayer(getMyPlantsForSolver()), zones) : [];
+  const queuePlants = useQueue ? filterByZone(sortByLayer(queue), zones) : [];
+  let allPlants = [...myPlants, ...queuePlants];
+
+  // Fallback: if no plants available, auto-select from library based on zone
+  if (!allPlants.length) {
+    allPlants = sortByLayer(getLibraryFallback(zones));
+  }
+  if (!allPlants.length) { alert('No compatible plants found. Add plants to the library.'); return; }
 
   // Existing placements in other areas (for collision avoidance)
   const existingPlaced = state.placed.filter(p => p.areaId !== area.id);

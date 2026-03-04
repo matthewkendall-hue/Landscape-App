@@ -9,7 +9,16 @@
       "WebFetch(domain:en.wikipedia.org)",
       "WebFetch(domain:www.tclf.org)",
       "WebFetch(domain:blog.iaac.net)",
-      "WebFetch(domain:www.nps.gov)"
+      "WebFetch(domain:www.nps.gov)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :5173)",
+      "Bash(npx vite --version)",
+      "Bash(npm install three)",
+      "WebFetch(domain:docs.trefle.io)",
+      "WebFetch(domain:floraapi.com)",
+      "WebFetch(domain:www.perenual.com)",
+      "WebFetch(domain:perenual.com)",
+      "Bash(git add .claude/launch.json .claude/settings.local.json index.html package-lock.json package.json src/main.js src/modules/autofill.js src/modules/landscapeAreas.js src/modules/library.js src/modules/myPlants.js src/styles/main.css src/data/gardenConcepts.js src/data/locationPlants.js src/modules/gardenViewer3d.js)"
     ]
   }
 }
