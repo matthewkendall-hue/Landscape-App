@@ -1,0 +1,228 @@
+:root {
+  --bg:#0c1109; --surface:#131a0f; --surface2:#192014; --surface3:#1f2a19;
+  --border:#283522; --border2:#344529;
+  --accent:#8cc63f; --accent2:#aede6a; --accent3:#c8f08a;
+  --muted:#3d5234; --text:#d4e8c2; --text2:#7a9e68; --text3:#506840;
+  --ground-c:#72b8d4; --shrub-c:#5dbb7a; --tree-c:#e8a030; --r:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Overpass',sans-serif;background:var(--bg);color:var(--text);font-size:13px;display:flex;flex-direction:column}
+
+/* HEADER */
+#hdr{display:flex;align-items:center;gap:8px;padding:0 12px;height:50px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto}
+#hdr::-webkit-scrollbar{height:0}
+#hdr h1{font-family:'Playfair Display',serif;font-size:19px;color:var(--accent3);white-space:nowrap;letter-spacing:-0.3px;flex-shrink:0}
+.hdr-div{width:1px;height:26px;background:var(--border2);flex-shrink:0}
+.tool-group{display:flex;gap:4px;align-items:center;flex-shrink:0}
+.group-label{font-family:'Overpass Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);padding:0 3px;white-space:nowrap}
+
+/* BUTTONS */
+.btn{font-family:'Overpass Mono',monospace;font-size:10.5px;font-weight:600;letter-spacing:0.3px;background:var(--surface2);color:var(--text2);border:1px solid var(--border2);border-radius:var(--r);padding:5px 10px;cursor:pointer;transition:background 0.12s,color 0.12s,border-color 0.12s;white-space:nowrap;user-select:none}
+.btn:hover{background:var(--surface3);color:var(--text);border-color:var(--muted)}
+.btn.active{background:var(--accent);color:#0c1109;border-color:var(--accent2)}
+.btn.primary{background:var(--accent);color:#0c1109;border-color:var(--accent2)}
+.btn.primary:hover{background:var(--accent2)}
+.btn.danger{border-color:#5a2020;color:#c47070}
+.btn.danger:hover{background:#5a2020;color:#ffaaaa}
+.btn:disabled{opacity:0.35;cursor:not-allowed;pointer-events:none}
+.btn.t-site{border-color:#5a8040;color:#8ec870}.btn.t-site.active{background:#5a8040;color:#0c1109}
+.btn.t-house{border-color:#e86a3a;color:#e88060}.btn.t-house.active{background:#e86a3a;color:#0c1109}
+.btn.t-patio{border-color:#b0a060;color:#c8b870}.btn.t-patio.active{background:#b0a060;color:#0c1109}
+.btn.t-canopy{border-color:#60b0a0;color:#70c0b0}.btn.t-canopy.active{background:#60b0a0;color:#0c1109}
+.btn.t-landscape{border-color:#8cc63f;color:#8cc63f}.btn.t-landscape.active{background:#8cc63f;color:#0c1109}
+
+/* LAYOUT */
+#app{display:flex;flex:1;min-height:0}
+
+/* LEFT */
+#left{width:248px;min-width:248px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.pane-header{padding:9px 13px 7px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.pane-title{font-family:'Overpass Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3)}
+#region-select{background:var(--surface2);color:var(--text2);border:1px solid var(--border2);border-radius:4px;padding:3px 6px;font-size:11px;font-family:'Overpass Mono',monospace}
+#lib-search-wrap{padding:5px 7px;border-bottom:1px solid var(--border)}
+#lib-search{width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:4px;padding:5px 8px;font-size:11px;font-family:'Overpass',sans-serif}
+#lib-search:focus{outline:none;border-color:var(--accent)}
+#lib-search::placeholder{color:var(--text3)}
+#db-list{flex:1;overflow-y:auto;padding:5px 7px;min-height:0}
+#db-list::-webkit-scrollbar{width:4px}
+#db-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.plant-card{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;padding:7px 5px;border-bottom:1px solid var(--border);transition:background 0.1s;cursor:grab}
+.plant-card:hover{background:var(--surface2)}
+.plant-card:active{cursor:grabbing}
+.plant-card-name{font-size:12px;font-weight:600;color:var(--text);line-height:1.3}
+.plant-card-meta{font-size:10px;color:var(--text3);margin-top:2px;line-height:1.5;font-family:'Overpass Mono',monospace}
+.layer-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:3px;vertical-align:middle}
+.add-btn{flex-shrink:0;background:var(--surface3);border:1px solid var(--border2);color:var(--accent);border-radius:4px;width:22px;height:22px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.12s}
+.add-btn:hover{background:var(--muted)}
+#add-form-wrap{border-top:1px solid var(--border);padding:9px 9px 11px}
+.form-title{font-family:'Overpass Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);margin-bottom:7px}
+.add-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.add-grid input,.add-grid select{background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:4px;padding:5px 7px;font-size:11px;font-family:'Overpass',sans-serif;width:100%}
+.add-grid input:focus,.add-grid select:focus{outline:none;border-color:var(--accent)}
+.add-grid input::placeholder{color:var(--text3)}
+.add-full{grid-column:1/-1}
+
+/* CANVAS */
+#canvas-wrap{flex:1;position:relative;min-width:0;background:var(--bg)}
+#svg{width:100%;height:100%;display:block;
+  background-image:radial-gradient(ellipse 80% 60% at 50% 40%,#0d1a09 0%,#0a1107 60%,#080d06 100%),radial-gradient(circle,#1c2618 1px,transparent 1px);
+  background-size:100% 100%,28px 28px}
+#survey-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0.35;pointer-events:none;display:none}
+#mode-banner{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:5px 16px;font-family:'Overpass Mono',monospace;font-size:11px;color:var(--accent2);pointer-events:none;opacity:0;transition:opacity 0.2s;white-space:nowrap;z-index:10}
+#mode-banner.visible{opacity:1}
+#survey-controls{position:absolute;top:12px;right:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px 11px;display:none;flex-direction:column;gap:5px;font-family:'Overpass Mono',monospace;font-size:10px;color:var(--text2);z-index:10}
+#survey-controls.visible{display:flex}
+#survey-controls input[type=range]{width:120px;accent-color:var(--accent);cursor:pointer}
+
+/* ZOOM CONTROLS */
+#zoom-controls{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:5px 8px;display:flex;align-items:center;gap:6px;font-family:'Overpass Mono',monospace;font-size:10px;color:var(--text2);z-index:5}
+#zoom-level{min-width:36px;text-align:center}
+#zoom-controls .btn{padding:3px 8px;font-size:12px}
+
+/* SHAPE LIST OVERLAY */
+#shape-list{position:absolute;bottom:14px;right:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;font-size:11px;font-family:'Overpass Mono',monospace;color:var(--text2);min-width:175px;max-height:260px;overflow-y:auto;z-index:5}
+#shape-list::-webkit-scrollbar{width:4px}
+#shape-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.sl-title{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:6px}
+.sl-item{display:flex;align-items:center;gap:6px;padding:4px 3px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s;border-radius:3px}
+.sl-item:last-child{border-bottom:none}
+.sl-item:hover{background:var(--surface2)}
+.sl-item.selected{background:var(--surface3)}
+.sl-swatch{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.sl-name{flex:1;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sl-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:0 2px;line-height:1}
+.sl-del:hover{color:#c47070}
+.sl-resolve-btn{background:var(--surface3);border:1px solid var(--border2);color:var(--accent);border-radius:3px;width:20px;height:20px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.12s;flex-shrink:0;padding:0}
+.sl-resolve-btn:hover{background:var(--accent);color:#0c1109}
+
+/* LEGEND */
+#legend{position:absolute;bottom:14px;left:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;font-size:10.5px;font-family:'Overpass Mono',monospace;color:var(--text2);z-index:5}
+.leg-section{margin-bottom:7px}.leg-section:last-child{margin-bottom:0}
+.leg-section-title{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:4px}
+.leg-row{display:flex;align-items:center;gap:7px;margin:2px 0}
+.leg-sw{width:10px;height:10px;border-radius:2px;flex-shrink:0;opacity:0.85}
+.leg-sw.circle{border-radius:50%}
+
+/* RIGHT */
+#right{width:262px;min-width:262px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+#queue-wrap{padding:5px 7px;overflow-y:auto;max-height:200px;border-bottom:1px solid var(--border)}
+#queue-wrap::-webkit-scrollbar{width:4px}
+#queue-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.queue-item{display:flex;align-items:center;justify-content:space-between;padding:5px 3px;border-bottom:1px solid var(--border)}
+.queue-item:last-child{border-bottom:none}
+.queue-name{font-size:11.5px;color:var(--text)}.queue-meta{font-size:10px;color:var(--text3);font-family:'Overpass Mono',monospace}
+.remove-btn{background:none;border:1px solid #5a2020;color:#c47070;border-radius:4px;width:20px;height:20px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:background 0.1s;flex-shrink:0}
+.remove-btn:hover{background:#5a2020}
+#list-wrap{flex:1;overflow-y:auto;min-height:0;padding:0 7px 10px}
+#list-wrap::-webkit-scrollbar{width:4px}
+#list-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+#plant-table{width:100%;border-collapse:collapse;font-size:11px}
+#plant-table th{font-family:'Overpass Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);padding:7px 3px 5px;border-bottom:1px solid var(--border2);text-align:left;white-space:nowrap}
+#plant-table td{padding:5px 3px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle}
+#plant-table tr:hover td{background:var(--surface2)}
+.qty-badge{background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;font-family:'Overpass Mono',monospace;font-size:10px;color:var(--accent)}
+.layer-pill{padding:1px 5px;border-radius:3px;font-family:'Overpass Mono',monospace;font-size:9px}
+.hint-text{font-size:10.5px;color:var(--text3);font-family:'Overpass Mono',monospace;padding:7px 3px;line-height:1.5}
+
+/* PARAMETRIC POPOVER */
+#param-popover{position:absolute;top:54px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:10px 14px;z-index:20;min-width:180px;box-shadow:0 4px 12px rgba(0,0,0,0.4)}
+#param-popover .form-title{margin-bottom:6px}
+#param-fields{display:flex;flex-direction:column;gap:5px}
+#param-fields label{display:flex;align-items:center;gap:6px;font-family:'Overpass Mono',monospace;font-size:10.5px;color:var(--text2)}
+#param-fields input{background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:4px;padding:4px 7px;font-size:11px;font-family:'Overpass Mono',monospace;width:70px}
+#param-fields input:focus{outline:none;border-color:var(--accent)}
+.param-popover-hint{font-size:9.5px;color:var(--text3);font-family:'Overpass Mono',monospace;margin-top:6px}
+
+/* AREA PANEL */
+#area-panel{border-bottom:1px solid var(--border)}
+.area-panel-body{padding:8px 10px}
+.area-toggle-row{display:flex;align-items:center;gap:4px;margin-bottom:4px}
+.area-toggle-label{display:flex;align-items:center;gap:6px;font-family:'Overpass Mono',monospace;font-size:10.5px;color:var(--text2);cursor:pointer}
+.area-toggle-label input[type="checkbox"]{accent-color:var(--accent);cursor:pointer}
+.area-queue-list{max-height:120px;overflow-y:auto;margin:4px 0}
+
+/* ZONE PROPERTIES */
+.zone-section{margin-bottom:6px}
+.zone-section-title{font-family:'Overpass Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:5px}
+.zone-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.zone-label{font-family:'Overpass Mono',monospace;font-size:10px;color:var(--text2);min-width:38px}
+.zone-select{background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:4px;padding:3px 6px;font-size:10px;font-family:'Overpass Mono',monospace;flex:1;margin-left:6px;cursor:pointer}
+.zone-select:focus{outline:none;border-color:var(--accent)}
+.zone-hint{font-size:9.5px;color:var(--accent2);font-family:'Overpass Mono',monospace;padding:5px 0 2px;line-height:1.4;border-top:1px solid var(--border);margin-top:6px}
+.area-queue-list::-webkit-scrollbar{width:4px}
+.area-queue-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* PARAMETRIC EDIT PANEL */
+#param-edit-panel{border-bottom:1px solid var(--border);padding:8px 10px}
+#param-edit-panel .form-title{margin-bottom:6px}
+.param-edit-grid{display:flex;gap:8px}
+.param-edit-grid label{display:flex;align-items:center;gap:5px;font-family:'Overpass Mono',monospace;font-size:10.5px;color:var(--text2)}
+.param-edit-grid input{background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:4px;padding:4px 6px;font-size:11px;font-family:'Overpass Mono',monospace;width:60px}
+.param-edit-grid input:focus{outline:none;border-color:var(--accent)}
+
+/* SHAPE LIST BADGE */
+.sl-badge{font-size:8px;font-family:'Overpass Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;background:var(--surface3);border:1px solid var(--border2);color:var(--accent);border-radius:3px;padding:1px 4px;flex-shrink:0}
+
+/* CARD BUTTONS */
+.card-btns{display:flex;gap:3px;flex-shrink:0;align-items:flex-start}
+.own-btn{font-size:12px!important}
+
+/* MY PLANTS */
+#my-plants-wrap{border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+#my-plants-list{padding:5px 7px;max-height:160px;overflow-y:auto}
+#my-plants-list::-webkit-scrollbar{width:4px}
+#my-plants-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.mp-item{display:flex;align-items:center;justify-content:space-between;padding:5px 3px;border-bottom:1px solid var(--border)}
+.mp-item:last-child{border-bottom:none}
+.mp-info{flex:1;min-width:0}
+.mp-name{font-size:11.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-meta{font-size:9.5px;color:var(--text3);font-family:'Overpass Mono',monospace;margin-top:1px}
+.mp-controls{display:flex;align-items:center;gap:3px;flex-shrink:0}
+.mp-qty-btn{background:var(--surface3);border:1px solid var(--border2);color:var(--text2);border-radius:3px;width:20px;height:20px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.1s}
+.mp-qty-btn:hover{background:var(--muted);color:var(--text)}
+.mp-qty{font-family:'Overpass Mono',monospace;font-size:11px;color:var(--accent);min-width:18px;text-align:center}
+
+/* MODAL */
+#modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;display:none;align-items:center;justify-content:center}
+#modal-overlay.visible{display:flex}
+.modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);width:380px;max-width:90vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.modal-title{font-family:'Overpass Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3)}
+.modal-close{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0 4px}
+.modal-close:hover{color:var(--text)}
+.modal-body{padding:14px 16px;overflow-y:auto;flex:1}
+
+/* SAVE / LOAD */
+.save-load-form{display:flex;gap:6px}
+.sl-input{flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:4px;padding:6px 10px;font-size:12px;font-family:'Overpass',sans-serif}
+.sl-input:focus{outline:none;border-color:var(--accent)}
+.sl-hint{font-size:10px;color:var(--text3);font-family:'Overpass Mono',monospace;margin-top:4px}
+.sl-project-list{display:flex;flex-direction:column;gap:4px}
+.sl-project-row{display:flex;align-items:center;justify-content:space-between;padding:8px 6px;border:1px solid var(--border);border-radius:4px;transition:background 0.1s}
+.sl-project-row:hover{background:var(--surface2)}
+.sl-project-info{flex:1;min-width:0}
+.sl-project-name{font-size:12px;font-weight:600;color:var(--text)}
+.sl-project-meta{font-size:9.5px;color:var(--text3);font-family:'Overpass Mono',monospace;margin-top:2px}
+.sl-project-btns{display:flex;gap:4px;flex-shrink:0}
+
+/* MEASUREMENTS */
+.measure-edge{font-family:'Overpass Mono',monospace;font-size:9px;fill:var(--text2);pointer-events:none;paint-order:stroke;stroke:var(--bg);stroke-width:3px}
+.measure-area{font-family:'Overpass Mono',monospace;font-size:11px;font-weight:600;fill:var(--accent2);pointer-events:none;paint-order:stroke;stroke:var(--bg);stroke-width:4px}
+
+/* SITE ANALYSIS */
+#site-analysis{border-top:1px solid var(--border)}
+.sa-body{padding:8px 10px;font-family:'Overpass Mono',monospace;font-size:10px}
+.sa-stat-row{display:flex;justify-content:space-between;align-items:center;padding:2px 0}
+.sa-stat-label{color:var(--text2)}
+.sa-stat-val{color:var(--accent);font-weight:600}
+.sa-divider{border-top:1px solid var(--border);margin:6px 0}
+.sa-section-title{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin:4px 0 3px}
+.sa-breakdown{margin:4px 0}
+.sa-bar-row{display:flex;align-items:center;gap:5px;padding:1px 0}
+.sa-bar-label{color:var(--text2);min-width:65px;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sa-bar{flex:1;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.sa-bar-fill{height:100%;background:var(--accent);border-radius:3px;transition:width 0.3s}
+.sa-bar-pct{color:var(--text3);font-size:9px;min-width:28px;text-align:right}
+.sa-bar-val{color:var(--accent);font-size:9px}
+.sa-tip{font-size:9.5px;color:var(--accent2);line-height:1.4;padding:3px 0;border-left:2px solid var(--accent);padding-left:6px;margin:3px 0}

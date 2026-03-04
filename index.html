@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Terrain — Landscape Layout Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Overpass+Mono:wght@400;600&family=Overpass:wght@300;400;600&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<div id="hdr">
+  <h1>🌿 Terrain</h1>
+  <div class="hdr-div"></div>
+  <div class="tool-group">
+    <span class="group-label">Survey</span>
+    <button class="btn" id="btn-import">Import Image</button>
+    <input type="file" id="survey-input" accept="image/*" style="display:none"/>
+  </div>
+  <div class="hdr-div"></div>
+  <div class="tool-group">
+    <span class="group-label">Draw Footprint</span>
+    <button class="btn t-site"   id="btn-draw-site">Site</button>
+    <button class="btn t-house"  id="btn-draw-house">House</button>
+    <button class="btn t-patio"  id="btn-draw-patio">Patio</button>
+    <button class="btn t-canopy" id="btn-draw-canopy">Canopy</button>
+    <button class="btn t-landscape" id="btn-draw-landscape">Landscape</button>
+  </div>
+  <div class="hdr-div"></div>
+  <div class="tool-group">
+    <span class="group-label">Planters</span>
+    <button class="btn" id="btn-param-rect">Rectangle</button>
+    <button class="btn" id="btn-param-circle">Circle</button>
+  </div>
+  <div class="hdr-div"></div>
+  <div class="tool-group">
+    <span class="group-label">Planting</span>
+    <button class="btn" id="btn-house-edge">House Edge</button>
+    <button class="btn primary" id="btn-fill">Auto-Fill</button>
+  </div>
+  <div class="hdr-div"></div>
+  <div class="tool-group">
+    <span class="group-label">View</span>
+    <button class="btn" id="btn-measure" title="Toggle edge lengths and area labels">Measure</button>
+  </div>
+  <div class="hdr-div"></div>
+  <div class="tool-group">
+    <span class="group-label">History</span>
+    <button class="btn" id="btn-undo" disabled title="Undo (Ctrl+Z)">Undo</button>
+    <button class="btn" id="btn-redo" disabled title="Redo (Ctrl+Y)">Redo</button>
+  </div>
+  <div class="hdr-div"></div>
+  <div class="tool-group">
+    <span class="group-label">Project</span>
+    <button class="btn" id="btn-save">Save</button>
+    <button class="btn" id="btn-load">Load</button>
+    <button class="btn" id="btn-export">Export</button>
+    <button class="btn danger" id="btn-reset">Reset</button>
+  </div>
+</div>
+
+<div id="app">
+
+  <!-- LEFT: LIBRARY -->
+  <div id="left">
+    <div class="pane-header">
+      <span class="pane-title">Plant Library</span>
+      <select id="region-select">
+        <option value="All">All Regions</option>
+        <option value="USDA-7">USDA 7</option>
+        <option value="USDA-8" selected>USDA 8</option>
+        <option value="USDA-9">USDA 9</option>
+      </select>
+    </div>
+    <div id="lib-search-wrap">
+      <input type="text" id="lib-search" placeholder="Search plants by name, layer, water..." />
+    </div>
+    <div id="db-list"></div>
+    <div id="my-plants-wrap">
+      <div class="pane-header"><span class="pane-title">My Plants</span></div>
+      <div id="my-plants-list"><div class="hint-text">No owned plants. Use &#11088; in library.</div></div>
+    </div>
+    <div id="add-form-wrap">
+      <div class="form-title">Add to Library</div>
+      <form id="add-form" class="add-grid">
+        <input class="add-full" required placeholder="Plant name" id="p-name"/>
+        <select id="p-layer"><option value="ground">Groundcover</option><option value="shrub">Shrub</option><option value="tree">Tree</option></select>
+        <input placeholder="Region (USDA-8)" id="p-region"/>
+        <input type="number" step="0.1" placeholder="Width (ft)" id="p-width"/>
+        <input type="number" step="0.1" placeholder="Height (ft)" id="p-height"/>
+        <input type="number" step="0.1" placeholder="Spacing (ft)" id="p-spacing"/>
+        <input placeholder="Light (hrs)" id="p-light"/>
+        <select id="p-water"><option value="low">Low water</option><option value="medium">Medium water</option><option value="high">High water</option></select>
+        <button class="btn primary add-full" type="submit">Add Plant</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- CENTER: CANVAS -->
+  <div id="canvas-wrap">
+    <img id="survey-img" alt="survey"/>
+    <svg id="svg"></svg>
+    <div id="mode-banner"></div>
+    <div id="survey-controls">
+      <span>Survey Opacity</span>
+      <input type="range" id="survey-opacity" min="5" max="100" value="35"/>
+    </div>
+    <div id="shape-list">
+      <div class="sl-title">Shapes</div>
+      <div id="sl-items"><div class="hint-text">No shapes yet.</div></div>
+    </div>
+    <!-- Parametric popover (floating, appears during placement) -->
+    <div id="param-popover" style="display:none">
+      <div class="form-title">Planter Dimensions</div>
+      <div id="param-fields"></div>
+      <div class="param-popover-hint">Click canvas to place · Esc to cancel</div>
+    </div>
+
+    <div id="zoom-controls">
+      <button class="btn" id="btn-zoom-in" title="Zoom In">+</button>
+      <span id="zoom-level">100%</span>
+      <button class="btn" id="btn-zoom-out" title="Zoom Out">-</button>
+      <button class="btn" id="btn-zoom-fit" title="Zoom to Fit">Fit</button>
+    </div>
+    <div id="legend">
+      <div class="leg-section">
+        <div class="leg-section-title">Footprints</div>
+        <div class="leg-row"><span class="leg-sw" style="background:#5a8040"></span>Site Boundary</div>
+        <div class="leg-row"><span class="leg-sw" style="background:#e86a3a"></span>House</div>
+        <div class="leg-row"><span class="leg-sw" style="background:#b0a060"></span>Patio / Hardscape</div>
+        <div class="leg-row"><span class="leg-sw" style="background:#60b0a0"></span>Tree Canopy</div>
+        <div class="leg-row"><span class="leg-sw" style="background:#8cc63f"></span>Landscape Area</div>
+      </div>
+      <div class="leg-section">
+        <div class="leg-section-title">Plants</div>
+        <div class="leg-row"><span class="leg-sw circle" style="background:#72b8d4"></span>Groundcover</div>
+        <div class="leg-row"><span class="leg-sw circle" style="background:#5dbb7a"></span>Shrubs</div>
+        <div class="leg-row"><span class="leg-sw circle" style="background:#e8a030"></span>Trees</div>
+      </div>
+      <div style="font-size:9.5px;color:var(--text3);margin-top:5px">
+        Drag nodes · Click mid-edge to add node<br>Right-click node to delete · Dbl-click plant removes
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: QUEUE + SCHEDULE -->
+  <div id="right">
+    <!-- Area panel (visible when a landscape area is selected) -->
+    <div id="area-panel" style="display:none"></div>
+    <!-- Parametric edit (visible when a parametric shape is selected) -->
+    <div id="param-edit-panel" style="display:none"></div>
+    <div class="pane-header"><span class="pane-title">Auto-Fill Queue</span></div>
+    <div id="queue-wrap"><div class="hint-text">Use + in library to queue plants.</div></div>
+    <div class="pane-header"><span class="pane-title">Planted Schedule</span></div>
+    <div id="list-wrap">
+      <table id="plant-table">
+        <thead><tr><th>Plant</th><th>Qty</th><th>Layer</th><th>Spc</th><th>Water</th></tr></thead>
+        <tbody id="list-body"></tbody>
+      </table>
+    </div>
+    <!-- Site Analysis (auto-populated from landscape areas) -->
+    <div id="site-analysis" style="display:none"></div>
+  </div>
+
+</div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

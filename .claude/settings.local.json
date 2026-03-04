@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npx vite build)",
+      "mcp__Claude_Preview__preview_start",
+      "WebFetch(domain:landscapetheory1.wordpress.com)",
+      "WebFetch(domain:dokumen.pub)",
+      "WebFetch(domain:en.wikipedia.org)",
+      "WebFetch(domain:www.tclf.org)",
+      "WebFetch(domain:blog.iaac.net)",
+      "WebFetch(domain:www.nps.gov)"
+    ]
+  }
+}
