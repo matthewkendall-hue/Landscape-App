@@ -4,6 +4,7 @@ export const TYPE_CFG = {
   patio:  { label: 'Patio',         stroke: '#b0a060', fill: '#2a2510', fOpacity: 0.50, sw: 1.8, dash: '6,3' },
   canopy:    { label: 'Canopy',         stroke: '#60b0a0', fill: '#0a2520', fOpacity: 0.30, sw: 1.5, dash: '4,4' },
   landscape: { label: 'Landscape Area', stroke: '#8cc63f', fill: '#1a3a0a', fOpacity: 0.20, sw: 2,   dash: '8,4' },
+  path:      { label: 'Path',           stroke: '#c8a0e0', fill: 'none',    fOpacity: 0,    sw: 2.5, dash: '6,3' },
 };
 
 export const LAYER_HEX = {
@@ -46,4 +47,10 @@ export const USE_ZONE = {
   edible:    { label: 'Edible Garden',       color: '#bb5d7a', desc: 'Food production, herbs, fruit' },
   buffer:    { label: 'Buffer / Screen',     color: '#7a6090', desc: 'Privacy, wind, noise screening' },
   stormwater:{ label: 'Stormwater / LID',    color: '#4488cc', desc: 'Rain garden, bioswale, infiltration' },
+};
+
+export const SOLVE_TYPES = {
+  naturalistic: { label: 'Naturalistic',    desc: 'Organic drifts and clusters' },
+  designed:     { label: 'Designed',        desc: 'Organized bands with rule-of-odds groupings' },
+  formal:       { label: 'Formal / Linear', desc: 'Strict parallel rows from front edge' },
 };

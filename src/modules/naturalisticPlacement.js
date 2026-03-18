@@ -92,25 +92,62 @@ function poissonDiskSample(boundary, minDist, rng, k = 30) {
 
   addSample(initX, initY);
 
-  while (active.length > 0) {
-    const idx = Math.floor(rng() * active.length);
-    const { x: cx, y: cy } = samples[active[idx]];
-    let accepted = false;
+  // Outer loop: expand from active seeds, then try to seed disconnected regions
+  // (handles obstacles like patios that split a landscape area into separate zones)
+  let seeding = true;
+  while (seeding) {
+    // Poisson expansion from active seeds
+    while (active.length > 0) {
+      const idx = Math.floor(rng() * active.length);
+      const { x: cx, y: cy } = samples[active[idx]];
+      let accepted = false;
 
-    for (let i = 0; i < k; i++) {
-      const angle = rng() * Math.PI * 2;
-      const dist = minDist + rng() * minDist; // annulus [r, 2r]
-      const nx = cx + Math.cos(angle) * dist;
-      const ny = cy + Math.sin(angle) * dist;
+      for (let i = 0; i < k; i++) {
+        const angle = rng() * Math.PI * 2;
+        const dist = minDist + rng() * minDist; // annulus [r, 2r]
+        const nx = cx + Math.cos(angle) * dist;
+        const ny = cy + Math.sin(angle) * dist;
 
-      if (nx < minX || nx > maxX || ny < minY || ny > maxY) continue;
-      if (!ptInPoly(nx, ny, pts)) continue;
-      if (inObstacle(nx, ny)) continue;
+        if (nx < minX || nx > maxX || ny < minY || ny > maxY) continue;
+        if (!ptInPoly(nx, ny, pts)) continue;
+        if (inObstacle(nx, ny)) continue;
 
-      const { gx, gy } = toGrid(nx, ny);
+        const { gx, gy } = toGrid(nx, ny);
+        if (gx < 0 || gx >= gridW || gy < 0 || gy >= gridH) continue;
+
+        // Check 5×5 neighborhood in spatial grid
+        let tooClose = false;
+        for (let dy = -2; dy <= 2 && !tooClose; dy++) {
+          for (let dx = -2; dx <= 2 && !tooClose; dx++) {
+            const ngy = gy + dy, ngx = gx + dx;
+            if (ngy < 0 || ngy >= gridH || ngx < 0 || ngx >= gridW) continue;
+            const gi = ngy * gridW + ngx;
+            if (grid[gi] >= 0) {
+              const s = samples[grid[gi]];
+              if (Math.hypot(nx - s.x, ny - s.y) < minDist) tooClose = true;
+            }
+          }
+        }
+
+        if (!tooClose) {
+          addSample(nx, ny);
+          accepted = true;
+        }
+      }
+
+      if (!accepted) active.splice(idx, 1);
+    }
+
+    // Try to find a seed point in an unsampled disconnected region
+    seeding = false;
+    for (let attempt = 0; attempt < 150; attempt++) {
+      const rx = minX + rng() * w;
+      const ry = minY + rng() * h;
+      if (!ptInPoly(rx, ry, pts) || inObstacle(rx, ry)) continue;
+
+      const { gx, gy } = toGrid(rx, ry);
       if (gx < 0 || gx >= gridW || gy < 0 || gy >= gridH) continue;
 
-      // Check 5×5 neighborhood in spatial grid
       let tooClose = false;
       for (let dy = -2; dy <= 2 && !tooClose; dy++) {
         for (let dx = -2; dx <= 2 && !tooClose; dx++) {
@@ -119,25 +156,24 @@ function poissonDiskSample(boundary, minDist, rng, k = 30) {
           const gi = ngy * gridW + ngx;
           if (grid[gi] >= 0) {
             const s = samples[grid[gi]];
-            if (Math.hypot(nx - s.x, ny - s.y) < minDist) tooClose = true;
+            if (Math.hypot(rx - s.x, ry - s.y) < minDist) tooClose = true;
           }
         }
       }
 
       if (!tooClose) {
-        addSample(nx, ny);
-        accepted = true;
+        addSample(rx, ry);
+        seeding = true; // Found a new region — re-enter expansion loop
+        break;
       }
     }
-
-    if (!accepted) active.splice(idx, 1);
   }
 
   return samples;
 }
 
 // ─── Candidate annotation ───────────────────────────────────────────
-function annotateCandidates(candidates, boundary) {
+function annotateCandidates(candidates, boundary, frontEdge) {
   const pts = boundary.points;
   const cx = pts.reduce((s, p) => s + p.x, 0) / pts.length;
   const cy = pts.reduce((s, p) => s + p.y, 0) / pts.length;
@@ -145,6 +181,10 @@ function annotateCandidates(candidates, boundary) {
   for (const c of candidates) {
     c.distFromEdge = distPoly(c, pts);
     c.distFromCentroid = Math.hypot(c.x - cx, c.y - cy);
+    if (frontEdge != null) {
+      const a = pts[frontEdge], b = pts[(frontEdge + 1) % pts.length];
+      c.distFromFront = distSeg(c, a, b);
+    }
   }
 }
 
@@ -200,10 +240,19 @@ function placeTreeSpecimens(candidates, treePlants, rng) {
     const count = Math.min(baseCount, maxFromQty);
 
     // Filter: prefer interior candidates not too close to edges
-    const viable = candidates
+    let viable = candidates
       .map((c, i) => ({ ...c, i }))
       .filter((c) => !usedIndices.has(c.i))
       .filter((c) => c.distFromEdge > spacingPx * 0.4);
+
+    // Front edge: prefer candidates away from front (rear of bed)
+    if (viable.length > 3 && viable[0]?.distFromFront != null) {
+      const maxFD = Math.max(...viable.map(c => c.distFromFront));
+      if (maxFD > 0) {
+        const rear = viable.filter(c => c.distFromFront > maxFD * 0.35);
+        if (rear.length >= count) viable = rear;
+      }
+    }
 
     if (viable.length === 0) continue;
 
@@ -318,6 +367,11 @@ function placeGroundcoverDrifts(candidates, groundPlants, usedIndices, rng) {
 
   if (!remaining.length) return placements;
 
+  // Front edge: prefer starting drifts near the front
+  if (remaining[0]?.distFromFront != null) {
+    remaining.sort((a, b) => a.distFromFront - b.distFromFront);
+  }
+
   // Build quantity caps per plant
   const qtyCaps = {};
   const qtyUsed = {};
@@ -412,7 +466,7 @@ function placeGroundcoverDrifts(candidates, groundPlants, usedIndices, rng) {
  * @param {number}   seed            Random seed for deterministic generation
  * @returns {Array}  Placed plant objects ready for state.placed
  */
-export function naturalisticSolve(area, plants, existingPlaced, seed) {
+export function naturalisticSolve(area, plants, existingPlaced, seed, frontEdge) {
   const rng = mulberry32(seed);
 
   // Separate plants by layer
@@ -430,7 +484,7 @@ export function naturalisticSolve(area, plants, existingPlaced, seed) {
   if (!candidates.length) return [];
 
   // Annotate with distance metadata
-  annotateCandidates(candidates, area);
+  annotateCandidates(candidates, area, frontEdge);
 
   // Phase 1: Trees as focal specimens (1–3 per species)
   const usedIndices = new Set();

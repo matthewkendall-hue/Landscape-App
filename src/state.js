@@ -6,7 +6,12 @@ export const state = {
   queue: [],
   plants: [],
   myPlants: [], // {plantId, name, layer, spacing, light, water, width, height, region, quantity, used}
+  selectedLocation: null, // { stateCode, city, lat, lng, usdaZone }
 };
+
+// North orientation for solar analysis (degrees clockwise from screen-up to true north)
+export let northAngle = 0;
+export function setNorthAngle(v) { northAngle = v; }
 
 // Shape list: [{id, type, label, points, svgEl, closed}]
 export const shapes = [];

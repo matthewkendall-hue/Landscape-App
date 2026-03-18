@@ -5,6 +5,8 @@ import { renderPlants, renderList } from './plants.js';
 import { snapshot } from './undoRedo.js';
 import { getMyPlantsForSolver, renderMyPlants } from './myPlants.js';
 import { naturalisticSolve } from './naturalisticPlacement.js';
+import { designedSolve } from './designedPlacement.js';
+import { formalSolve } from './formalPlacement.js';
 
 /**
  * Get a fallback plant list from the library, filtered by the current region.
@@ -210,8 +212,21 @@ export function solveForArea(area, seed) {
   // Existing placements in other areas + pinned plants as obstacles
   const existingPlaced = [...state.placed.filter(p => p.areaId !== area.id), ...pinnedInArea];
 
-  // Run naturalistic placement algorithm
-  const results = naturalisticSolve(area, allPlants, existingPlaced, resolveSeed);
+  // Run placement algorithm based on solve type
+  const solveType = area.solveType || 'naturalistic';
+  let results;
+
+  if (solveType === 'formal') {
+    if (area.frontEdge == null) {
+      alert('Formal layout requires a front edge. Set one first.');
+      return;
+    }
+    results = formalSolve(area, allPlants, existingPlaced, resolveSeed, area.frontEdge);
+  } else if (solveType === 'designed') {
+    results = designedSolve(area, allPlants, existingPlaced, resolveSeed, area.frontEdge);
+  } else {
+    results = naturalisticSolve(area, allPlants, existingPlaced, resolveSeed, area.frontEdge);
+  }
 
   // Tag results with area ID
   results.forEach(p => p.areaId = area.id);

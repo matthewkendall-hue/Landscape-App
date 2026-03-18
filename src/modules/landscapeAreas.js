@@ -1,8 +1,29 @@
-import { LAYER_CSS, SUN_EXPOSURE, HYDROZONE, SOIL_TYPE, USE_ZONE } from '../config.js';
-import { shapes, selectedShapeId, state } from '../state.js';
+import { LAYER_CSS, SUN_EXPOSURE, HYDROZONE, SOIL_TYPE, USE_ZONE, SOLVE_TYPES } from '../config.js';
+import { shapes, selectedShapeId, state, drawingType } from '../state.js';
 import { selectShape } from './shapes.js';
 import { snapshot } from './undoRedo.js';
 import { getPlantSourceMode } from './autofill.js';
+import { distSeg } from '../utils/geometry.js';
+import { ns, svgPt, setBanner, getSvg } from '../utils/svg.js';
+
+let frontEdgeLine = null;
+
+export function renderAreaFrontEdge() {
+  if (frontEdgeLine) { frontEdgeLine.remove(); frontEdgeLine = null; }
+  const area = shapes.find(s => s.id === selectedShapeId && s.type === 'landscape');
+  if (!area || area.frontEdge == null) return;
+  const pts = area.points;
+  const a = pts[area.frontEdge], b = pts[(area.frontEdge + 1) % pts.length];
+  const ln = ns('line');
+  ln.setAttribute('x1', a.x); ln.setAttribute('y1', a.y);
+  ln.setAttribute('x2', b.x); ln.setAttribute('y2', b.y);
+  ln.setAttribute('stroke', '#4a90d9');
+  ln.setAttribute('stroke-width', '4');
+  ln.setAttribute('stroke-dasharray', '8,4');
+  ln.setAttribute('class', 'front-edge-indicator');
+  getSvg().appendChild(ln);
+  frontEdgeLine = ln;
+}
 
 export function getAreaShapes() {
   return shapes.filter(s => s.type === 'landscape' && s.closed);
@@ -13,6 +34,7 @@ function ensureZones(area) {
   if (!area.zones) {
     area.zones = { sun: 'full', hydrozone: 'mesic', soil: 'loam', use: 'habitat' };
   }
+  if (!area.solveType) area.solveType = 'naturalistic';
   return area.zones;
 }
 
@@ -23,6 +45,7 @@ export function renderAreaPanel() {
   const area = shapes.find(s => s.id === selectedShapeId && s.type === 'landscape');
   if (!area) {
     panel.style.display = 'none';
+    if (frontEdgeLine) { frontEdgeLine.remove(); frontEdgeLine = null; }
     return;
   }
 
@@ -41,6 +64,22 @@ export function renderAreaPanel() {
 
   // ——— Zone properties (from landscape planning skill) ———
   const zones = ensureZones(area);
+
+  // ——— Solve Type selector ———
+  const solveSection = document.createElement('div');
+  solveSection.className = 'zone-section';
+  solveSection.innerHTML = '<div class="zone-section-title">Solve Type</div>';
+  solveSection.appendChild(makeZoneSelect('Style', 'solve-type', area.solveType || 'naturalistic', SOLVE_TYPES, v => {
+    snapshot(); area.solveType = v; renderAreaPanel();
+  }));
+  if (area.solveType === 'formal' && area.frontEdge == null) {
+    const warn = document.createElement('div');
+    warn.className = 'zone-hint';
+    warn.style.color = '#e8a030';
+    warn.textContent = 'Formal layout requires a front edge. Set one below.';
+    solveSection.appendChild(warn);
+  }
+  body.appendChild(solveSection);
 
   const zoneSection = document.createElement('div');
   zoneSection.className = 'zone-section';
@@ -154,6 +193,48 @@ export function renderAreaPanel() {
     mod.renderPlants();
   });
 
+  // ——— Front Edge ———
+  const feRow = document.createElement('div');
+  feRow.style.marginTop = '6px';
+  const feBtn = document.createElement('button');
+  feBtn.className = 'btn';
+  feBtn.style.width = '100%';
+  feBtn.style.fontSize = '10px';
+  feBtn.textContent = area.frontEdge != null ? 'Front Edge \u2713 (click to reset)' : 'Set Front Edge';
+  feBtn.onclick = () => {
+    if (area.frontEdge != null) {
+      snapshot();
+      area.frontEdge = null;
+      renderAreaFrontEdge();
+      renderAreaPanel();
+      return;
+    }
+    setBanner('Click near an edge of this area to set as Front Edge');
+    const svg = getSvg();
+    svg.style.cursor = 'crosshair';
+    const handler = evt => {
+      if (drawingType) { svg.removeEventListener('click', handler); return; }
+      const p = svgPt(evt);
+      const pts = area.points;
+      let best = 0, bestD = Infinity;
+      for (let i = 0; i < pts.length; i++) {
+        const d = distSeg(p, pts[i], pts[(i + 1) % pts.length]);
+        if (d < bestD) { bestD = d; best = i; }
+      }
+      snapshot();
+      area.frontEdge = best;
+      renderAreaFrontEdge();
+      renderAreaPanel();
+      svg.removeEventListener('click', handler);
+      svg.style.cursor = 'default';
+      setBanner('Front edge set \u2713', true);
+      setTimeout(() => setBanner('', false), 2000);
+    };
+    svg.addEventListener('click', handler);
+  };
+  feRow.appendChild(feBtn);
+  body.appendChild(feRow);
+
   // ——— Plant source info ———
   const sourceMode = getPlantSourceMode();
   const sourceInfo = document.createElement('div');
@@ -211,6 +292,7 @@ export function renderAreaPanel() {
 
   body.appendChild(btnRow);
   panel.appendChild(body);
+  renderAreaFrontEdge();
 }
 
 // ——— Helpers ———

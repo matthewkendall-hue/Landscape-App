@@ -6,6 +6,12 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["node_modules/vite/bin/vite.js", "--host", "--port", "5173"],
       "port": 5173
+    },
+    {
+      "name": "dtile",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/tapao/Projects/DTile Configurator/node_modules/vite/bin/vite.js", "--port", "5174", "--config", "C:/Users/tapao/Projects/DTile Configurator/vite.config.js"],
+      "port": 5174
     }
   ]
 }

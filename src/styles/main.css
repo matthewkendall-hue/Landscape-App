@@ -43,7 +43,10 @@ body{font-family:'Overpass',sans-serif;background:var(--bg);color:var(--text);fo
 #left{width:248px;min-width:248px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .pane-header{padding:9px 13px 7px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .pane-title{font-family:'Overpass Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3)}
-#region-select{background:var(--surface2);color:var(--text2);border:1px solid var(--border2);border-radius:4px;padding:3px 6px;font-size:11px;font-family:'Overpass Mono',monospace}
+/* LOCATION PICKER */
+#location-picker{display:flex;flex-direction:column;gap:3px;padding:5px 7px;border-bottom:1px solid var(--border)}
+#location-picker select{background:var(--surface2);color:var(--text2);border:1px solid var(--border2);border-radius:4px;padding:3px 6px;font-size:10px;font-family:'Overpass Mono',monospace;width:100%}
+#location-picker select:focus{outline:none;border-color:var(--accent)}
 #lib-search-wrap{padding:5px 7px;border-bottom:1px solid var(--border)}
 #lib-search{width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:4px;padding:5px 8px;font-size:11px;font-family:'Overpass',sans-serif}
 #lib-search:focus{outline:none;border-color:var(--accent)}
@@ -65,6 +68,8 @@ body{font-family:'Overpass',sans-serif;background:var(--bg);color:var(--text);fo
 .meta-tag.meta-medium{color:#5dbb7a;border-color:#5dbb7a33}
 .meta-tag.meta-high{color:#72b8d4;border-color:#72b8d433}
 .owned-badge{font-family:'Overpass Mono',monospace;font-size:7.5px;text-transform:uppercase;letter-spacing:0.5px;background:var(--tree-c);color:#0c1109;border-radius:3px;padding:1px 4px;font-weight:700}
+.native-badge{font-family:'Overpass Mono',monospace;font-size:7.5px;text-transform:uppercase;letter-spacing:0.5px;background:var(--accent);color:#0c1109;border-radius:3px;padding:1px 4px;font-weight:700}
+.plant-card-sci{font-size:9px;color:var(--text3);font-style:italic;margin-top:1px}
 .layer-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:3px;vertical-align:middle;flex-shrink:0}
 
 /* CARD ACTION BUTTONS */
@@ -264,6 +269,17 @@ body{font-family:'Overpass',sans-serif;background:var(--bg);color:var(--text);fo
 .measure-edge{font-family:'Overpass Mono',monospace;font-size:9px;fill:var(--text2);pointer-events:none;paint-order:stroke;stroke:var(--bg);stroke-width:3px}
 .measure-area{font-family:'Overpass Mono',monospace;font-size:11px;font-weight:600;fill:var(--accent2);pointer-events:none;paint-order:stroke;stroke:var(--bg);stroke-width:4px}
 
+/* PATH EDIT PANEL */
+#path-edit-panel{border-bottom:1px solid var(--border)}
+.path-toggle{display:flex;gap:4px;margin-bottom:8px}
+.path-toggle .btn{flex:1;font-size:10px}
+.path-toggle .btn.active{background:var(--accent);color:#0c1109}
+.path-pl-fields{display:flex;flex-direction:column;gap:5px}
+.path-pl-fields label{display:flex;align-items:center;gap:6px;font-family:'Overpass Mono',monospace;font-size:10.5px;color:var(--text2)}
+.path-pl-fields select,.path-pl-fields input{background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:4px;padding:4px 7px;font-size:11px;font-family:'Overpass Mono',monospace;flex:1}
+.path-pl-fields select:focus,.path-pl-fields input:focus{outline:none;border-color:var(--accent)}
+.path-offset-section{margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+
 /* SITE ANALYSIS */
 #site-analysis{border-top:1px solid var(--border)}
 .sa-body{padding:8px 10px;font-family:'Overpass Mono',monospace;font-size:10px}
@@ -424,3 +440,30 @@ body{font-family:'Overpass',sans-serif;background:var(--bg);color:var(--text);fo
 }
 .gc-legend-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .gc-legend-flower{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-left:1px}
+
+/* SOLAR ANALYSIS PANEL */
+#solar-panel{
+  position:absolute;bottom:12px;left:12px;z-index:25;
+  background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);
+  padding:10px 14px;min-width:220px;max-width:260px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.5);
+  font-family:'Overpass Mono',monospace;font-size:10.5px;
+}
+.solar-panel-title{font-weight:600;color:var(--accent);margin-bottom:8px;font-size:11px;letter-spacing:0.5px;text-transform:uppercase}
+.solar-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.solar-row label{color:var(--text3);min-width:40px;font-size:10px}
+.solar-row input[type=range]{flex:1;accent-color:var(--accent);height:3px}
+.solar-row select{background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:4px;padding:3px 6px;font-size:10px;font-family:'Overpass Mono',monospace}
+.solar-row span{color:var(--text2);min-width:55px;text-align:right;font-size:10px}
+#solar-info{border-top:1px solid var(--border);margin-top:6px;padding-top:6px}
+.solar-info-row{display:flex;justify-content:space-between;color:var(--text2);font-size:10px;line-height:1.8}
+.solar-info-row span:first-child{color:var(--text3)}
+#solar-close-btn{margin-top:8px;width:100%}
+
+/* NORTH COMPASS */
+#north-compass{
+  position:absolute;top:12px;right:12px;z-index:25;
+  cursor:default;opacity:0.85;transition:opacity 0.2s;
+}
+#north-compass:hover{opacity:1}
+#north-compass svg{transition:transform 0.15s ease-out}

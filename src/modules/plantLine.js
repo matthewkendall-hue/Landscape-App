@@ -1,12 +1,11 @@
 // plantLine.js — Plant Line Tool
 // Draw a polyline path, then place plants evenly along it.
 
-import { state, shapes } from '../state.js';
+import { state } from '../state.js';
 import { ns, svgPt, setBanner, getSvg } from '../utils/svg.js';
-import { ftToPx, ptInPoly } from '../utils/geometry.js';
-import { getSiteShape } from './shapes.js';
-import { renderPlants, renderList } from './plants.js';
-import { snapshot } from './undoRedo.js';
+import { renderAllNodes } from './shapes.js';
+import { renderShapeList } from './shapeList.js';
+import { addPathShape, placePlantsAlongPath } from './pathShape.js';
 
 let lineMode = null; // null | { points, previewLine, ghostDots }
 
@@ -94,80 +93,20 @@ export function finishPlantLine() {
   hidePopover();
 
   if (!config.plant) { alert('Select a plant for the line.'); return; }
-  placePlantsAlongLine(points, config);
-}
 
-function placePlantsAlongLine(points, config) {
-  snapshot();
-
-  // Calculate total path length and segments
-  let totalLen = 0;
-  const segments = [];
-  for (let i = 0; i < points.length - 1; i++) {
-    const len = Math.hypot(points[i + 1].x - points[i].x, points[i + 1].y - points[i].y);
-    segments.push({ start: points[i], end: points[i + 1], len });
-    totalLen += len;
-  }
-
-  const count = config.count;
-  if (count < 1 || totalLen < 1) return;
-
-  const site = getSiteShape();
-  const plants = config.pattern === 'alternating' && config.plant2
-    ? [config.plant, config.plant2]
-    : [config.plant];
-
-  for (let i = 0; i < count; i++) {
-    const dist = count > 1 ? (totalLen / (count - 1)) * i : totalLen / 2;
-    const pos = pointAtDistance(segments, dist);
-    if (!pos) continue;
-
-    const plant = plants[i % plants.length];
-    const spacingPx = ftToPx(plant.spacing || plant.width || 3);
-    const r = spacingPx / 2 * 0.95;
-
-    // Validate position
-    const inSite = site ? ptInPoly(pos.x, pos.y, site.points) : true;
-    const inObstacle = shapes.some(s =>
-      (s.type === 'house' || s.type === 'patio') && ptInPoly(pos.x, pos.y, s.points)
-    );
-    if (!inSite || inObstacle) continue;
-
-    // Detect landscape area
-    const targetArea = shapes.find(s =>
-      s.type === 'landscape' && s.closed && ptInPoly(pos.x, pos.y, s.points)
-    );
-
-    state.placed.push({
-      id: crypto.randomUUID(),
-      x: pos.x, y: pos.y, r,
-      plantId: plant.id,
-      name: plant.name,
-      layer: plant.layer,
-      spacing: plant.spacing,
-      light: plant.light,
-      water: plant.water,
-      areaId: targetArea ? targetArea.id : undefined,
-    });
-  }
-
-  renderPlants();
-  renderList();
-}
-
-function pointAtDistance(segments, dist) {
-  let accum = 0;
-  for (const seg of segments) {
-    if (accum + seg.len >= dist || seg === segments[segments.length - 1]) {
-      const t = seg.len > 0 ? Math.min(1, (dist - accum) / seg.len) : 0;
-      return {
-        x: seg.start.x + (seg.end.x - seg.start.x) * t,
-        y: seg.start.y + (seg.end.y - seg.start.y) * t,
-      };
-    }
-    accum += seg.len;
-  }
-  return segments[segments.length - 1]?.end;
+  // Create a persistent path shape and store plant line config
+  const shape = addPathShape(points, false);
+  shape.plantLine = {
+    plantId: config.plant.id,
+    plantName: config.plant.name,
+    plant2Id: config.plant2 ? config.plant2.id : null,
+    plant2Name: config.plant2 ? config.plant2.name : null,
+    count: config.count,
+    pattern: config.pattern,
+  };
+  placePlantsAlongPath(shape);
+  renderAllNodes();
+  renderShapeList();
 }
 
 // ---- Popover UI ----

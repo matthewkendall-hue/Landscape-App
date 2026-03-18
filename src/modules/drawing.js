@@ -7,6 +7,7 @@ import { movePlant, endPlantDrag } from './plants.js';
 import { undo, redo } from './undoRedo.js';
 import { isParametricMode, handleParametricClick } from './parametric.js';
 import { isPlantLineMode, handlePlantLineClick, handlePlantLineMove } from './plantLine.js';
+import { isPathDrawingMode, handlePathClick, handlePathMove } from './pathShape.js';
 
 let lastClickTime = 0;
 
@@ -77,6 +78,12 @@ export function initDrawingEvents() {
   const svg = getSvg();
 
   svg.addEventListener('click', evt => {
+    // Path drawing mode intercept
+    if (isPathDrawingMode()) {
+      handlePathClick(evt);
+      return;
+    }
+
     // Plant line mode intercept
     if (isPlantLineMode()) {
       handlePlantLineClick(evt);
@@ -119,6 +126,7 @@ export function initDrawingEvents() {
   });
 
   svg.addEventListener('mousemove', evt => {
+    if (isPathDrawingMode()) handlePathMove(evt);
     if (isPlantLineMode()) handlePlantLineMove(evt);
     const p = svgPt(evt);
     if (st.drawingType) updatePreview(p.x, p.y);
@@ -134,7 +142,7 @@ export function initDrawingEvents() {
       const shape = st.shapes.find(s => s.id === st.draggingEdge.shapeId);
       if (shape) {
         const e = st.draggingEdge;
-        const nextIdx = (e.idx + 1) % shape.points.length;
+        const nextIdx = shape.closed ? (e.idx + 1) % shape.points.length : e.idx + 1;
         const dx = p.x - e.startSvg.x;
         const dy = p.y - e.startSvg.y;
         const proj = dx * e.normal.x + dy * e.normal.y;
@@ -148,6 +156,14 @@ export function initDrawingEvents() {
   });
 
   window.addEventListener('mouseup', () => {
+    // Redistribute plants on path after drag ends
+    if (st.draggingNode || st.draggingEdge) {
+      const shapeId = st.draggingNode?.shapeId || st.draggingEdge?.shapeId;
+      const shape = shapeId ? st.shapes.find(s => s.id === shapeId) : null;
+      if (shape?.type === 'path' && shape.plantLine) {
+        import('./pathShape.js').then(m => m.redistributePlantsOnPath(shape));
+      }
+    }
     st.setDraggingNode(null);
     st.setDraggingEdge(null);
     endPlantDrag();

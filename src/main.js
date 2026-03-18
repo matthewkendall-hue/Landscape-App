@@ -1,5 +1,5 @@
 import './styles/main.css';
-import { shapes } from './state.js';
+import { shapes, state } from './state.js';
 import { syncViewBox, getSvg } from './utils/svg.js';
 import { initDrawingEvents, startDrawing } from './modules/drawing.js';
 import { loadLibrary, renderLibrary, renderQueue, initLibraryForm } from './modules/library.js';
@@ -21,6 +21,9 @@ import { renderMeasurements, toggleMeasurements } from './modules/measurements.j
 import { renderSiteAnalysis } from './modules/siteAnalysis.js';
 import { showGardenConcepts } from './modules/gardenViewer3d.js';
 import { startPlantLine, initPlantLine } from './modules/plantLine.js';
+import { startPathDrawing, initPathDrawing, makePathEl } from './modules/pathShape.js';
+import { cancelDrawing } from './modules/drawing.js';
+import { toggleSolar, refreshSolar } from './modules/solarAnalysis.js';
 
 /**
  * Rebuild SVG shapes from serialized shape data and re-render all UI.
@@ -29,7 +32,9 @@ import { startPlantLine, initPlantLine } from './modules/plantLine.js';
 function rebuildFromData(shapeData) {
   const svg = getSvg();
   for (const s of shapeData) {
-    const el = makeShapeEl(s.type, s.points);
+    const el = s.type === 'path'
+      ? makePathEl(s.points, s.smooth || false)
+      : makeShapeEl(s.type, s.points);
     svg.appendChild(el);
     const shape = {
       id: s.id, type: s.type, label: s.label,
@@ -42,6 +47,11 @@ function rebuildFromData(shapeData) {
     if (s.visible !== undefined) shape.visible = s.visible;
     if (s.zones) shape.zones = s.zones;
     if (s._resolveSeed !== undefined) shape._resolveSeed = s._resolveSeed;
+    if (s.smooth !== undefined) shape.smooth = s.smooth;
+    if (s.plantLine) shape.plantLine = s.plantLine;
+    if (s.frontEdge != null) shape.frontEdge = s.frontEdge;
+    if (s.solveType) shape.solveType = s.solveType;
+    if (s.height != null) shape.height = s.height;
     shapes.push(shape);
   }
   renderPlants();
@@ -102,6 +112,11 @@ function init() {
   document.getElementById('btn-clear-plants').onclick = clearAllPlants;
   document.getElementById('btn-plant-line').onclick = startPlantLine;
   initPlantLine();
+
+  // Path drawing (spine/spline)
+  document.getElementById('btn-draw-spine').onclick = () => startPathDrawing(false);
+  document.getElementById('btn-draw-spline').onclick = () => startPathDrawing(true);
+  initPathDrawing(cancelDrawing);
   document.getElementById('btn-export').onclick = exportProjectFile;
   document.getElementById('btn-reset').onclick = resetAll;
 
@@ -114,15 +129,12 @@ function init() {
 
   // 3D Concepts button
   document.getElementById('btn-concepts').onclick = () => {
-    const zone = document.getElementById('region-select').value;
-    showGardenConcepts(zone);
+    const loc = state.selectedLocation;
+    showGardenConcepts(loc?.usdaZone || '');
   };
 
-  // Auto-show 3D concepts when location/region changes
-  document.getElementById('region-select').addEventListener('change', () => {
-    const zone = document.getElementById('region-select').value;
-    showGardenConcepts(zone);
-  });
+  // Solar Analysis button
+  document.getElementById('btn-solar').onclick = toggleSolar;
 
   // Undo/redo buttons
   document.getElementById('btn-undo').onclick = undo;

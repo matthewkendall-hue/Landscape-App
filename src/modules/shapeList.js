@@ -4,6 +4,7 @@ import { selectShape, deleteShape } from './shapes.js';
 import { renderAreaPanel } from './landscapeAreas.js';
 import { renderParametricPanel } from './parametric.js';
 import { renderSiteAnalysis } from './siteAnalysis.js';
+import { renderPathPanel } from './pathShape.js';
 
 export function renderShapeList() {
   const wrap = document.getElementById('sl-items');
@@ -58,6 +59,20 @@ export function renderShapeList() {
       row.appendChild(resolveBtn);
     }
 
+    // Path badge (spine/spline + plant count)
+    if (shape.type === 'path') {
+      const badge = document.createElement('span');
+      badge.className = 'sl-badge';
+      badge.textContent = shape.smooth ? 'spline' : 'spine';
+      row.appendChild(badge);
+      if (shape.plantLine) {
+        const plBadge = document.createElement('span');
+        plBadge.className = 'sl-badge';
+        plBadge.textContent = `${shape.plantLine.count} plants`;
+        row.appendChild(plBadge);
+      }
+    }
+
     row.addEventListener('click', () => selectShape(shape.id));
 
     const del = document.createElement('button');
@@ -73,5 +88,6 @@ export function renderShapeList() {
   renderAreaPanel();
   const selShape = shapes.find(s => s.id === selectedShapeId);
   renderParametricPanel(selShape);
+  renderPathPanel(selShape);
   renderSiteAnalysis();
 }

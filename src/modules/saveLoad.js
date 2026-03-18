@@ -1,4 +1,4 @@
-import { state, shapes, houseEdgeIndex, setHouseEdgeIndex, viewBox, setViewBox } from '../state.js';
+import { state, shapes, houseEdgeIndex, setHouseEdgeIndex, viewBox, setViewBox, northAngle, setNorthAngle } from '../state.js';
 import { openModal, closeModal } from '../utils/modal.js';
 import { clearHistory } from './undoRedo.js';
 
@@ -24,6 +24,11 @@ function serializeProject() {
       if (s.visible !== undefined) snap.visible = s.visible;
       if (s.zones) snap.zones = { ...s.zones };
       if (s._resolveSeed !== undefined) snap._resolveSeed = s._resolveSeed;
+      if (s.smooth !== undefined) snap.smooth = s.smooth;
+      if (s.plantLine) snap.plantLine = { ...s.plantLine };
+      if (s.frontEdge != null) snap.frontEdge = s.frontEdge;
+      if (s.solveType) snap.solveType = s.solveType;
+      if (s.height != null) snap.height = s.height;
       return snap;
     }),
     placed: state.placed.map(p => ({ ...p })),
@@ -32,6 +37,8 @@ function serializeProject() {
     plants: state.plants.map(p => ({ ...p })),
     viewBox: { ...viewBox },
     houseEdgeIndex,
+    selectedLocation: state.selectedLocation ? { ...state.selectedLocation } : null,
+    northAngle,
   };
 }
 
@@ -55,6 +62,8 @@ function applyProject(data, onRebuild) {
   // Restore scalar state
   if (data.viewBox) setViewBox(data.viewBox);
   setHouseEdgeIndex(data.houseEdgeIndex ?? null);
+  state.selectedLocation = data.selectedLocation || null;
+  setNorthAngle(data.northAngle || 0);
 
   clearHistory();
 

@@ -33,6 +33,12 @@
   </div>
   <div class="hdr-div"></div>
   <div class="tool-group">
+    <span class="group-label">Paths</span>
+    <button class="btn" id="btn-draw-spine">Spine</button>
+    <button class="btn" id="btn-draw-spline">Spline</button>
+  </div>
+  <div class="hdr-div"></div>
+  <div class="tool-group">
     <span class="group-label">Planting</span>
     <button class="btn" id="btn-house-edge">House Edge</button>
     <button class="btn" id="btn-plant-line">Plant Line</button>
@@ -49,6 +55,7 @@
     <span class="group-label">View</span>
     <button class="btn" id="btn-measure" title="Toggle edge lengths and area labels">Measure</button>
     <button class="btn" id="btn-concepts" title="View 3D garden concepts for your zone">3D Concepts</button>
+    <button class="btn" id="btn-solar" title="Run solar shadow analysis">Solar Analysis</button>
   </div>
   <div class="hdr-div"></div>
   <div class="tool-group">
@@ -72,12 +79,11 @@
   <div id="left">
     <div class="pane-header">
       <span class="pane-title">Plant Library</span>
-      <select id="region-select">
-        <option value="All">All Regions</option>
-        <option value="USDA-7">USDA 7</option>
-        <option value="USDA-8" selected>USDA 8</option>
-        <option value="USDA-9">USDA 9</option>
-      </select>
+    </div>
+    <div id="location-picker">
+      <select id="state-select"><option value="">Select State...</option></select>
+      <select id="city-select" style="display:none"><option value="">Select City...</option></select>
+      <select id="theme-select" style="display:none"><option value="">All Native Plants</option></select>
     </div>
     <div id="lib-search-wrap">
       <input type="text" id="lib-search" placeholder="Search plants by name, layer, water..." />
@@ -137,6 +143,7 @@
         <div class="leg-row"><span class="leg-sw" style="background:#b0a060"></span>Patio / Hardscape</div>
         <div class="leg-row"><span class="leg-sw" style="background:#60b0a0"></span>Tree Canopy</div>
         <div class="leg-row"><span class="leg-sw" style="background:#8cc63f"></span>Landscape Area</div>
+        <div class="leg-row"><span class="leg-sw" style="background:#c8a0e0"></span>Path (Spine/Spline)</div>
       </div>
       <div class="leg-section">
         <div class="leg-section-title">Plants</div>
@@ -156,6 +163,8 @@
     <div id="area-panel" style="display:none"></div>
     <!-- Parametric edit (visible when a parametric shape is selected) -->
     <div id="param-edit-panel" style="display:none"></div>
+    <!-- Path edit (visible when a path shape is selected) -->
+    <div id="path-edit-panel" style="display:none"></div>
     <div class="pane-header"><span class="pane-title">Auto-Fill Queue</span></div>
     <div id="queue-wrap"><div class="hint-text">Use + in library to queue plants.</div></div>
     <div class="pane-header"><span class="pane-title">Planted Schedule</span></div>
